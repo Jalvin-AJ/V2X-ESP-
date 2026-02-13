@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
+
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Inter', sans-serif;
+}
+
+#overlay {
+    position: absolute;
+    top: 50px;
+    left: 60px;
+    z-index: 10;
+    color: #fff;
+    pointer-events: none;
+}
+
+.hud-panel {
+    background: rgba(0, 20, 30, 0.7);
+    border-left: 4px solid #00f3ff;
+    backdrop-filter: blur(8px);
+    padding: 15px;
+    border-radius: 0 8px 8px 0;
+}
+
+/* Radar Mini-Map Style */
+#radar-container {
+    position: absolute;
+    top: 50px;
+    right: 60px;
+    width: 200px;
+    height: 200px;
+    background: rgba(0, 15, 25, 0.8);
+    border: 1px solid rgba(0, 243, 255, 0.3);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    overflow: hidden;
+}
+
+#radar-label {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    font-size: 9px;
+    font-weight: 800;
+    color: #00f3ff;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.control-panel {
+    position: absolute;
+    bottom: 50px;
+    right: 22%;
+    transform: translateX(50%) perspective(600px) rotateX(5deg) rotateY(-10deg);
+    background: rgba(10, 10, 10, 0.85);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 243, 255, 0.15);
+    pointer-events: auto;
+    color: white;
+    z-index: 100;
+    width: 260px;
+    box-shadow: -5px 5px 20px rgba(0, 0, 0, 0.5);
+}
+
+.alert-box {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    display: none;
+    z-index: 200;
+    width: auto;
+    max-width: 600px;
+}
+
+#speedometer {
+    position: absolute;
+    bottom: 40px;
+    left: 20%;
+    transform: translateX(-50%) perspective(500px) rotateX(5deg);
+    text-align: center;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 243, 255, 0.2);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+    min-width: 220px;
+}
+
+.aeb-active {
+    color: #f87171 !important;
+    text-shadow: 0 0 25px #f87171;
+}
+
+.status-ticker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #00f3ff;
+    margin-top: 5px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.infra-mini {
+    font-size: 10px;
+    font-weight: 800;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+}

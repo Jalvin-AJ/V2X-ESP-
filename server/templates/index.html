@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced V2X ADAS Analysis Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<div class="space-y-2 mt-4 border-t border-cyan-500/20 pt-4">
+    <h3 class="text-[10px] font-bold text-cyan-400 uppercase">Manual Positioning</h3>
+    <div class="flex gap-2">
+        <input type="number" id="dist-input" placeholder="Meters" 
+               class="bg-black border border-cyan-500/40 text-white text-xs p-2 rounded w-full outline-none focus:border-cyan-400">
+        <button onclick="sendDistance()" 
+                class="bg-cyan-600 hover:bg-cyan-500 px-3 py-2 rounded text-[10px] font-bold uppercase transition">
+            Move
+        </button>
+    </div>
+</div>
+<body>
+
+    <div id="overlay">
+        <div class="hud-panel shadow-2xl border border-cyan-500/20">
+            <h1 class="text-xl font-black tracking-tighter text-cyan-400 uppercase">V2X INTELLIGENCE SYSTEM</h1>
+
+        </div>
+    </div>
+
+    <!-- V2E Asset Radar Map -->
+    <div id="radar-container">
+        <div id="radar-label">V2E Network Topology</div>
+        <canvas id="radar-canvas" width="200" height="200"></canvas>
+    </div>
+
+    <div class="alert-box" id="v2x-alert">
+        <div id="alert-bg"
+            class="px-10 py-6 rounded-xl font-black text-3xl border-4 border-white bg-red-600 text-white animate-pulse shadow-2xl">
+            <div id="alert-title">COLLISION HAZARD</div>
+            <div id="alert-desc" class="text-sm font-medium mt-1 opacity-90 tracking-wide uppercase">AEB: Autonomous
+                Emergency Braking Engaged</div>
+        </div>
+    </div>
+
+    <div id="speedometer">
+        <div class="text-[10px] text-cyan-300 font-bold tracking-widest mb-[-5px]">VEHICLE VELOCITY</div>
+        <div id="speed-val" class="text-7xl font-black text-white transition-all duration-300">45</div>
+        <div id="drive-state" class="text-[12px] font-bold text-cyan-500 uppercase">Active Cruise Control</div>
+
+        <div class="infra-mini">
+            <div id="sig-display">SIG: <span id="sig-color" class="text-green-500">GRN</span> <span id="sig-ttl"
+                    class="opacity-50">12s</span></div>
+            <div id="dist-display">SIGNAL DIST: <span id="dist-val" class="text-white">--m</span></div>
+        </div>
+    </div>
+
+    <div class="control-panel space-y-4">
+        <div class="space-y-1">
+            <h2 class="text-xs font-bold text-cyan-400 uppercase tracking-widest">Test Scenarios</h2>
+            <p class="text-[10px] text-gray-400">Automatic 5s Simulation Reset</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3">
+            <button onclick="triggerEvent('braking')"
+                class="bg-cyan-950 hover:bg-cyan-800 border border-cyan-500/40 p-3 rounded-lg text-xs transition text-left group">
+                <span class="block font-bold">1. V2V: Lead Brake Event</span>
+                <span class="text-[9px] opacity-60">Car ahead brakes; ADAS responds</span>
+            </button>
+            <button onclick="triggerEvent('signal')"
+                class="bg-cyan-950 hover:bg-cyan-800 border border-cyan-500/40 p-3 rounded-lg text-xs transition text-left">
+                <span class="block font-bold">2. V2I: Signal Protocol</span>
+                <span class="text-[9px] opacity-60">Automatic stop line synchronization</span>
+            </button>
+        </div>
+
+        <button id="weather-btn" onclick="cycleWeather()"
+            class="w-full bg-white/5 hover:bg-white/10 p-2 rounded-lg text-[10px] transition border border-purple-500/30 font-bold uppercase tracking-tighter">
+            Weather: Clear
+        </button>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>
