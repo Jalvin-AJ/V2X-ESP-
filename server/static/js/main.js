@@ -1,4 +1,5 @@
 // --- CORE VARIABLES ---
+const socket = io(); // Connects to your Flask server
 let scene, camera, renderer, clock;
 let environmentGroup, playerCar, npcCar, pedestrian, trafficLight, stopLine;
 let radarCanvas, radarCtx;
@@ -6,12 +7,34 @@ let speed = 45;
 let targetSpeed = 45;
 let npcSpeed = 45;
 let targetNpcSpeed = 45;
+let currentPotSpeed = 0; // Hardware input
 let weatherState = 0;
 let activeScenario = null;
 let signalData = { state: 'green', timer: 15 };
 let scenarioResetTimer = null;
 let oncomingCars = [];
 let signalStopLocked = false;
+
+// --- SOCKET EVENT LISTENERS ---
+socket.on('v2x_update', function (data) {
+    if (data.event === 'speed_change') {
+        currentPotSpeed = data.value;
+        console.log("Hardware Speed Update:", currentPotSpeed);
+    }
+    if (data.event === 'AEB_ACTIVE') {
+        triggerEvent('braking');
+        currentPotSpeed = 0;
+    }
+});
+
+socket.on('apply_distance_shift', function (data) {
+    if (environmentGroup) {
+        environmentGroup.children.forEach(child => {
+            child.position.z += data.amount * 1.5;
+        });
+        console.log(`Manual Shift Applied: ${data.amount}m`);
+    }
+});
 
 // Shared detailed materials
 const carGlassMat = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.0, metalness: 1.0 });
@@ -437,6 +460,13 @@ function animate() {
             statusColor = "text-amber-500";
         }
 
+        // --- HARDWARE SPEED BRIDGE ---
+        // Only use Potentiometer speed if we aren't in a special scenario
+        if (activeScenario === null) {
+            // Map 0-100 input to approx 0-50 visual speed units
+            computedTargetSpeed = currentPotSpeed * 0.5;
+        }
+
         targetSpeed = computedTargetSpeed;
         setDriveState(activeStatus, statusColor);
 
@@ -509,11 +539,3 @@ function sendDistance() {
         document.getElementById('dist-input').value = ''; // Clear input
     }
 }
-socket.on('apply_distance_shift', function(data) {
-    // In Three.js, to move forward, we shift the environment backward
-    environmentGroup.children.forEach(child => {
-        child.position.z += data.amount * 1.5; // Multiplier for visual scale
-    });
-    
-    console.log(`Car moved forward by ${data.amount}m`);
-});
