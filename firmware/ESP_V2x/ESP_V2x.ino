@@ -34,7 +34,6 @@ const unsigned long highInterval     = 200;
 const unsigned long criticalInterval = 80;
 const unsigned long overrideDuration = 3000;
 
-// ----- MOTOR -----
 void moveForward(int speed) {
   digitalWrite(IN1, HIGH);
   digitalWrite(IN2, LOW);
@@ -86,7 +85,11 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
-  esp_now_init();
+
+  if (esp_now_init() != ESP_OK) {
+    return;
+  }
+
   esp_now_register_recv_cb(OnDataRecv);
 }
 
@@ -99,20 +102,19 @@ void loop() {
     activeRisk = distanceRisk;
   }
 
-  // ----- MOTOR MAPPING -----
+  // ----- Motor Mapping -----
   if      (activeRisk == 0) moveForward(220);
   else if (activeRisk == 1) moveForward(150);
   else if (activeRisk == 2) moveForward(80);
   else                      stopMotors();
 
-  // ----- ORIGINAL LED LOGIC -----
+  // ----- LED + Buzzer -----
   if (activeRisk == 0) {
     digitalWrite(RED_LED, LOW);
     digitalWrite(YELLOW_LED, LOW);
     digitalWrite(BUZZER, LOW);
     digitalWrite(GREEN_LED, HIGH);
   }
-
   else {
 
     digitalWrite(GREEN_LED, LOW);

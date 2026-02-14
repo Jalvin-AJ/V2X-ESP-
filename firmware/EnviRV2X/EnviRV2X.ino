@@ -4,7 +4,7 @@
 #define POT_PIN 34
 #define BTN_SIGNAL 21
 #define BTN_PEDESTRIAN 22
-#define MOTOR_ARM 27   // <-- FIXED PIN
+#define MOTOR_ARM 27
 
 // ----- MOTOR PINS -----
 #define IN1 13
@@ -14,8 +14,16 @@
 #define ENA 19
 #define ENB 23
 
-uint8_t receiverAddress[] = { 
+// ---- MAC ADDRESSES ----
+
+// Vehicle ESP MAC
+uint8_t vehicleAddress[] = { 
   0xF8, 0xB3, 0xB7, 0x29, 0xE8, 0xF4
+};
+
+// Gateway ESP MAC
+uint8_t gatewayAddress[] = { 
+  0x88, 0x57, 0x21, 0x78, 0x84, 0x4C
 };
 
 typedef struct {
@@ -25,19 +33,20 @@ typedef struct {
 } V2XPacket;
 
 V2XPacket packet;
-
 int lastDistanceRisk = -1;
 
-// ---------- SEND EVENT ----------
+// ---------- SEND TO BOTH ----------
 void sendEvent(int source, int event, int priority) {
+
   packet.sourceType = source;
   packet.eventType  = event;
   packet.priority   = priority;
 
-  esp_now_send(receiverAddress, (uint8_t *)&packet, sizeof(packet));
+  esp_now_send(vehicleAddress, (uint8_t *)&packet, sizeof(packet));
+  esp_now_send(gatewayAddress, (uint8_t *)&packet, sizeof(packet));
 }
 
-// ---------- MOTOR CONTROL ----------
+// ---------- MOTOR ----------
 void moveForward(int speed) {
   digitalWrite(IN1, HIGH);
   digitalWrite(IN2, LOW);
@@ -53,12 +62,13 @@ void stopMotors() {
 }
 
 void setup() {
+
   Serial.begin(115200);
 
   pinMode(POT_PIN, INPUT);
   pinMode(BTN_SIGNAL, INPUT_PULLUP);
   pinMode(BTN_PEDESTRIAN, INPUT_PULLUP);
-  pinMode(MOTOR_ARM, INPUT_PULLUP);  // proper pull-up now works
+  pinMode(MOTOR_ARM, INPUT_PULLUP);
 
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
@@ -70,14 +80,23 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
-  WiFi.setTxPower(WIFI_POWER_19_5dBm);   // stronger signal
+  WiFi.setTxPower(WIFI_POWER_19_5dBm);
 
-  esp_now_init();
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("ESP-NOW Init Failed");
+    return;
+  }
 
   esp_now_peer_info_t peerInfo = {};
-  memcpy(peerInfo.peer_addr, receiverAddress, 6);
   peerInfo.channel = 0;
   peerInfo.encrypt = false;
+
+  // Add Vehicle peer
+  memcpy(peerInfo.peer_addr, vehicleAddress, 6);
+  esp_now_add_peer(&peerInfo);
+
+  // Add Gateway peer
+  memcpy(peerInfo.peer_addr, gatewayAddress, 6);
   esp_now_add_peer(&peerInfo);
 
   Serial.println("Environment Ready");
@@ -85,7 +104,7 @@ void setup() {
 
 void loop() {
 
-  // ----- V2V Distance -----
+  // ----- Distance Risk -----
   int potValue = analogRead(POT_PIN);
   int risk;
 
@@ -99,21 +118,19 @@ void loop() {
     lastDistanceRisk = risk;
   }
 
-  // ----- MOTOR CONTROL VIA SWITCH -----
+  // ----- Motor Control -----
   bool motorEnabled = (digitalRead(MOTOR_ARM) == LOW);
 
   if (motorEnabled) {
-
     if      (risk == 0) moveForward(220);
     else if (risk == 1) moveForward(150);
     else if (risk == 2) moveForward(80);
     else                stopMotors();
-
   } else {
     stopMotors();
   }
 
-  // ----- BUTTON OVERRIDES (NON-BLOCKING) -----
+  // ----- Overrides -----
   static unsigned long lastButtonTime = 0;
 
   if (millis() - lastButtonTime > 250) {
