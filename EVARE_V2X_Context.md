@@ -1,171 +1,149 @@
-# EVARE – V2X Cooperative Safety Prototype  
-## Technical Context Document
+EVARE V2X Cooperative System – Master Context File
 
----
+============================================ 1. SYSTEM OVERVIEW
+============================================
 
-## 1. Project Overview
+Project Name: EVARE – Vehicle-to-Everything Cooperative Safety Prototype
 
-EVARE is a cooperative Vehicle-to-Everything (V2X) safety prototype built using two ESP32 boards communicating via ESP-NOW (offline peer-to-peer protocol).
+Architecture: - 3 × ESP32 Dev Modules - ESP-NOW communication
+(peer-to-peer, offline) - Star topology recommended (Infrastructure as
+coordinator)
 
-The system simulates:
+System Simulates: - V2V (Vehicle-to-Vehicle) - V2I
+(Vehicle-to-Infrastructure) - Cooperative Safety Logic - Motor-based
+vehicle behavior - Risk prioritization engine
 
-- V2V (Vehicle-to-Vehicle) distance-based collision risk
-- V2I (Vehicle-to-Infrastructure) red signal alert
-- V2P (Vehicle-to-Pedestrian) critical pedestrian alert
+============================================ 2. HARDWARE CONFIGURATION
+============================================
 
-The prototype demonstrates:
+  --------------------------------------------
+  ESP32 #1 – Vehicle A Node
+  --------------------------------------------
+  Components: - DC Motor - Motor Driver (L298N
+  or equivalent) - Brake Button - Indicator
+  Button - Status LEDs - Buzzer
 
-- Real-time risk evaluation
-- Multi-source hazard processing
-- Alert prioritization
-- Human-Machine Interface (HMI) feedback
-- Offline low-latency wireless communication
+  Responsibilities: - Broadcast speed,
+  acceleration, brake status, intent - Receive
+  other vehicle data - Perform collision
+  prediction - Execute PWM motor control
+  decisions
+  --------------------------------------------
 
-There is no internet or cloud dependency.
+ESP32 #2 – Vehicle B Node
 
----
+Components: - DC Motor - Motor Driver - LEDs - Buzzer
 
-## 2. System Architecture
+Responsibilities: - Receive Vehicle A state - Calculate TTC
+(Time-To-Collision) - Execute Cooperative Adaptive Cruise Control -
+Execute emergency brake reaction - Lane change cooperation
 
-### 2.1 Environment Node (ESP32 #1)
+  --------------------------------
+  ESP32 #3 – Infrastructure Node
+  --------------------------------
 
-Represents the external world.
+Components: - Buttons (School Zone, Hazard, Emergency Mode) - LEDs
+(Status Display)
 
-#### Inputs:
-- Potentiometer → Simulates distance between two vehicles (V2V)
-- Button 1 → Red traffic signal (V2I)
-- Button 2 → Pedestrian crossing (V2P)
+Responsibilities: - Broadcast infrastructure overrides - School zone
+speed limit - Intersection negotiation manager - Emergency vehicle
+broadcast
 
-#### Responsibilities:
-- Converts analog distance to risk levels
-- Sends structured V2X packets via ESP-NOW
-- Overrides distance risk when infrastructure or pedestrian events occur
+============================================ 3. MOTOR CONTROL
+ARCHITECTURE ============================================
 
----
+Speed Variable: - Represented via PWM (0–255)
 
-### 2.2 Vehicle Node (ESP32 #2)
+Acceleration: - Calculated as delta speed over time
 
-Represents the moving EV.
+Braking: - Sudden negative acceleration threshold triggers EEBL
+broadcast
 
-#### Responsibilities:
-- Receives V2X packets via ESP-NOW
-- Applies risk prioritization logic
-- Activates visual and audio alerts:
-  - Green LED → Safe
-  - Yellow LED → Medium Risk
-  - Red LED → High / Critical Risk
-  - Buzzer → Severity-based beeping
+Motor Logic: - Soft reduction for medium risk - Immediate stop for
+critical risk
 
-This node simulates the EV’s safety processing unit.
+============================================ 4. V2V CORE DATA STRUCTURE
+(Basic Safety Message Simulation)
+============================================
 
----
+Each vehicle continuously broadcasts:
 
-## 3. Communication Protocol
+{ vehicleID speed acceleration brakeStatus turnSignal laneID timestamp }
 
-### Wireless Protocol
-ESP-NOW (Peer-to-peer, low latency, no router required)
+Broadcast Frequency: - 5–10 Hz (recommended)
 
-### Packet Structure
+============================================ 5. RISK CALCULATION MODEL
+============================================
 
-```cpp
-typedef struct {
-  int sourceType;   // 1 = V2V, 2 = V2I, 3 = V2P
-  int eventType;    // Specific event identifier
-  int priority;     // 0 = Safe, 1 = Medium, 2 = High, 3 = Critical
-} V2XPacket;
----
+Time-To-Collision (TTC):
 
-## 4. Risk Model
+TTC = distance / relative_speed
 
-### 4.1 Distance-Based V2V (Potentiometer)
+Threshold Example: - TTC > 4 sec → SAFE - 2–4 sec → WARNING - <2 sec →
+CRITICAL
 
-Analog range: **0–4095**
+Distance: - Simulated via potentiometer or logical variable
 
-| ADC Value     | Risk Level | Meaning   |
-|---------------|------------|-----------|
-| > 3200        | 0          | Safe      |
-| 2200–3200     | 1          | Medium    |
-| 1000–2200     | 2          | High      |
-| < 1000        | 3          | Critical  |
+Relative Speed: - speed_self - speed_other
 
-Distance risk updates continuously in real time.
+============================================ 6. IMPLEMENTED / PLANNED
+FEATURES ============================================
 
----
+CRITICAL SAFETY: 1. Emergency Electronic Brake Light (EEBL) 2. Forward
+Collision Warning (TTC-based) 3. Chain Reaction Braking 4. Head-On
+Collision Alert
 
-### 4.2 V2I Override (Red Signal)
+PREVENTIVE: 5. Lane Change Assist 6. Overtaking Intent Broadcast 7.
+Hazard Broadcast 8. Speed Harmonization
 
-When the Red Signal button is pressed:
+COOPERATIVE DRIVING: 9. Cooperative Adaptive Cruise Control (CACC) 10.
+Platooning 11. Merge Assist 12. Intersection Negotiation
 
-sourceType = 2
-priority = 2
+INFRASTRUCTURE: 13. School Zone Speed Cap 14. Emergency Vehicle Priority
+15. Road Hazard Override
 
-This overrides the current distance risk for approximately 3 seconds.
+============================================ 7. EVENT PRIORITIZATION
+ENGINE ============================================
 
----
+Priority Levels: 0 – Safe 1 – Medium 2 – High 3 – Critical
 
-### 4.3 V2P Override (Pedestrian)
+Priority Hierarchy: Infrastructure Override > Emergency Brake > TTC
+Warning > Intent Sharing
 
-When the Pedestrian button is pressed:
+Highest priority event controls motor output.
 
-EVARE_ALERT:SAFE
-EVARE_ALERT:MEDIUM:DISTANCE
-EVARE_ALERT:HIGH:RED_SIGNAL
-EVARE_ALERT:CRITICAL:PEDESTRIAN
+============================================ 8. COMMUNICATION STRUCTURE
+(ESP-NOW) ============================================
 
+Each ESP32 must: - Register MAC addresses of peers - Send structured
+packets - Implement acknowledgment handling
 
-### Recommended UI Mapping
+Topology: Infrastructure → Vehicles Vehicles ↔ Vehicles
 
-| Risk      | UI Background  |
-|-----------|----------------|
-| SAFE      | Green          |
-| MEDIUM    | Yellow         |
-| HIGH      | Red            |
-| CRITICAL  | Flashing Red   |
+============================================ 9. LIVE DASHBOARD
+REQUIREMENTS ============================================
 
----
+Dashboard must display:
 
-## 8. Demo Flow
+For Each Vehicle: - MAC Address - Current Speed - Acceleration - Brake
+Status - Turn Signal Status - Risk Level - TTC Value - Active Event -
+Priority Level
 
-1. Turn potentiometer → Distance decreases  
-   → UI transitions: Green → Yellow → Red  
+For Infrastructure: - Active Overrides - School Zone Mode - Emergency
+Mode - Intersection Status
 
-2. Press Pedestrian Button  
-   → Immediate Critical override  
+Live Update Requirements: - Real-time WebSocket or Serial-to-Web
+bridge - Color-coded risk levels - Flashing indicators for critical
+alerts
 
-3. After timeout  
-   → System returns to distance state  
+============================================ 10. FUTURE EXPANSION
+============================================
 
-4. Press Red Signal Button  
-   → High risk override  
+-   Multi-vehicle scaling (more ESP nodes)
+-   Latency measurement display
+-   Event logging
+-   Graph plotting of speed vs time
+-   Risk trend visualization
 
-This demonstrates cooperative multi-source hazard processing.
-
----
-
-## 9. What This Prototype Demonstrates
-
-EVARE showcases a cooperative safety layer for electric vehicles by integrating:
-
-- Intent sharing (V2V)
-- Infrastructure alerts (V2I)
-- Pedestrian hazard detection (V2P)
-- Real-time risk prioritization
-- Human-machine interface escalation
-- Offline wireless safety communication
-
-It simulates how modern EVs process V2X information to enhance road safety.
-
----
-
-## 10. Future Expansion Possibilities
-
-- Display real-time distance value
-- Time-to-collision (TTC) calculation
-- Auto braking motor control
-- Event logging history
-- Latency measurement display
-- Multi-vehicle scaling
-
----
-
-**End of Context Document**
+============================================ END OF MASTER CONTEXT
+============================================

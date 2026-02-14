@@ -5,7 +5,28 @@ body {
     overflow: hidden;
     background: #000;
     font-family: 'Inter', sans-serif;
+    transition: background 0.6s ease;
 }
+
+/* ----- SYSTEM MODES (Hardware Driven) ----- */
+
+body.safe-mode {
+    background: radial-gradient(circle at center, #001a12 0%, #000000 70%);
+}
+
+body.medium-mode {
+    background: radial-gradient(circle at center, #2b2100 0%, #000000 70%);
+}
+
+body.high-mode {
+    background: radial-gradient(circle at center, #2b0000 0%, #000000 70%);
+}
+
+body.critical-mode {
+    background: radial-gradient(circle at center, #450000 0%, #000000 70%);
+}
+
+/* ----- TOP HUD ----- */
 
 #overlay {
     position: absolute;
@@ -24,7 +45,8 @@ body {
     border-radius: 0 8px 8px 0;
 }
 
-/* Radar Mini-Map Style */
+/* ----- RADAR ----- */
+
 #radar-container {
     position: absolute;
     top: 50px;
@@ -50,6 +72,8 @@ body {
     letter-spacing: 0.1em;
 }
 
+/* ----- CONTROL PANEL ----- */
+
 .control-panel {
     position: absolute;
     bottom: 50px;
@@ -66,6 +90,8 @@ body {
     box-shadow: -5px 5px 20px rgba(0, 0, 0, 0.5);
 }
 
+/* ----- ALERT BOX ----- */
+
 .alert-box {
     position: absolute;
     top: 30%;
@@ -77,6 +103,21 @@ body {
     width: auto;
     max-width: 600px;
 }
+
+.alert-box.active {
+    display: block;
+}
+
+.alert-critical {
+    animation: pulseRed 0.6s infinite alternate;
+}
+
+@keyframes pulseRed {
+    from { box-shadow: 0 0 20px rgba(255, 0, 0, 0.4); }
+    to { box-shadow: 0 0 40px rgba(255, 0, 0, 0.9); }
+}
+
+/* ----- SPEEDOMETER ----- */
 
 #speedometer {
     position: absolute;
@@ -93,7 +134,11 @@ body {
     min-width: 220px;
 }
 
-.aeb-active {
+#speed-val {
+    transition: all 0.3s ease;
+}
+
+.speed-critical {
     color: #f87171 !important;
     text-shadow: 0 0 25px #f87171;
 }
@@ -107,6 +152,8 @@ body {
     white-space: nowrap;
 }
 
+/* ----- MINI INFO ----- */
+
 .infra-mini {
     font-size: 10px;
     font-weight: 800;
@@ -115,4 +162,18 @@ body {
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: space-between;
+}
+
+/* ----- CONNECTION STATUS COLORS ----- */
+
+.connected {
+    color: #22c55e !important;
+}
+
+.disconnected {
+    color: #ef4444 !important;
+}
+
+.warning {
+    color: #facc15 !important;
 }
